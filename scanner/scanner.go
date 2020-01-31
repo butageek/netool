@@ -15,6 +15,9 @@ type Scanner struct{}
 
 // Scan scans open ports for the host
 func (s *Scanner) Scan(host, port string) error {
+	portRefArray := &PortRefArray{}
+	portRefArray.Init()
+
 	ports := parsePorts(port)
 	numPorts := len(ports)
 	portChan := make(chan int, numPorts)
@@ -24,7 +27,7 @@ func (s *Scanner) Scan(host, port string) error {
 	numScanners := 100
 	for i := 1; i <= numScanners; i++ {
 		wg.Add(1)
-		go scanner(host, portChan, &wg)
+		go scanner(host, portChan, portRefArray, &wg)
 	}
 
 	for port := range ports {
@@ -68,7 +71,7 @@ func parsePorts(portString string) []int {
 	return ports
 }
 
-func scanner(host string, portChan <-chan int, wg *sync.WaitGroup) {
+func scanner(host string, portChan <-chan int, pra *PortRefArray, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for port := range portChan {
@@ -80,6 +83,7 @@ func scanner(host string, portChan <-chan int, wg *sync.WaitGroup) {
 		}
 		defer conn.Close()
 
-		fmt.Printf("Open port found: %d\n", port)
+		portRef := pra.Find(port)
+		fmt.Printf("Found open port: %d -> %s -> %s\n", port, portRef.Name, portRef.Desc)
 	}
 }
