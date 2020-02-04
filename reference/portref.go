@@ -1,4 +1,4 @@
-package scanner
+package reference
 
 import (
 	"os"
@@ -20,7 +20,7 @@ type PortRefArray []PortRef
 
 // Init initialize PortRefArray
 func (p *PortRefArray) Init() {
-	os.Chdir("scanner")
+	os.Chdir("reference")
 	f, err := os.OpenFile("service-names-port-numbers.csv", os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		panic(err)

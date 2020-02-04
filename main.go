@@ -19,6 +19,7 @@ func main() {
 	hostFlag := []cli.Flag{
 		&cli.StringFlag{
 			Name:     "host",
+			Usage:    "hostname or IP address to lookup",
 			Required: true,
 		},
 	}
@@ -73,21 +74,40 @@ func main() {
 			},
 		},
 		{
-			Name:  "scan",
+			Name:  "port",
 			Usage: "scan open ports for the host",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:     "host",
+					Usage:    "hostname or IP address to scan",
 					Required: true,
 				},
 				&cli.StringFlag{
 					Name:     "port",
+					Usage:    "port number to scan, eg. 22,80,100-200",
 					Required: true,
 				},
 			},
 			Action: func(c *cli.Context) error {
 				myScanner := &scanner.Scanner{}
-				myScanner.Scan(c.String("host"), c.String("port"))
+				myScanner.ScanPort(c.String("host"), c.String("port"))
+
+				return nil
+			},
+		},
+		{
+			Name:  "net",
+			Usage: "scan network for hosts that are alive",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "cidr",
+					Usage:    "network range (CIDR) to scan, eg. 192.168.1.0/24",
+					Required: true,
+				},
+			},
+			Action: func(c *cli.Context) error {
+				myScanner := &scanner.Scanner{}
+				myScanner.ScanNet(c.String("cidr"))
 
 				return nil
 			},
