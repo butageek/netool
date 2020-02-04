@@ -52,11 +52,18 @@ func (o *Formatter) AssemblePortData(ports []int, pra *reference.PortRefArray) {
 // AssembleNetData assembles output data for net scanner
 func (o *Formatter) AssembleNetData(ips []net.IP) {
 	var data [][]string
+	var row []string
 
 	for _, ip := range ips {
 		macStr := arp.Search(ip.String())
 		mac, err := net.ParseMAC(macStr)
 		if err != nil {
+			row = []string{
+				ip.String(),
+				"",
+				"",
+			}
+			data = append(data, row)
 			continue
 		}
 		prefix := [3]byte{
@@ -65,7 +72,7 @@ func (o *Formatter) AssembleNetData(ips []net.IP) {
 			mac[2],
 		}
 		manufacturer := macs.ValidMACPrefixMap[prefix]
-		row := []string{
+		row = []string{
 			ip.String(),
 			mac.String(),
 			manufacturer,
