@@ -61,6 +61,7 @@ func (o *Formatter) AssembleNetData(ips []net.IP) {
 		if err != nil {
 			row = []string{
 				ip.String(),
+				"UP",
 				"",
 				"",
 			}
@@ -75,6 +76,7 @@ func (o *Formatter) AssembleNetData(ips []net.IP) {
 		manufacturer := macs.ValidMACPrefixMap[prefix]
 		row = []string{
 			ip.String(),
+			"UP",
 			mac.String(),
 			manufacturer,
 		}

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os/exec"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -55,7 +56,7 @@ func (s *Scanner) ScanNet(cidr string) error {
 
 	if len(hostsAlive) > 0 {
 		formatter := &formatter.Formatter{
-			Header:    []string{"Host", "MAC Address", "Manufacturer"},
+			Header:    []string{"Host", "Status", "MAC Address", "Manufacturer"},
 			Border:    false,
 			Separator: "|",
 		}
@@ -94,13 +95,26 @@ func inc(ip net.IP) {
 func netScanner(jobChan <-chan string, resultChan chan<- string, wgs *sync.WaitGroup) {
 	defer wgs.Done()
 
-	for ip := range jobChan {
-		_, err := exec.Command("ping", "-c1", ip).Output()
-		if err != nil {
-			continue
-		} else {
-			fmt.Printf("Found host: %s\n", ip)
-			resultChan <- ip
+	switch runtime.GOOS {
+	case "windows":
+		for ip := range jobChan {
+			out, _ := exec.Command("ping", "-n", "1", ip).Output()
+			if strings.Contains(string(out), "Destination host unreachable") {
+				continue
+			} else {
+				fmt.Printf("Found host: %s\n", ip)
+				resultChan <- ip
+			}
+		}
+	case "linux":
+		for ip := range jobChan {
+			_, err := exec.Command("ping", "-c", "1", ip).Output()
+			if err != nil {
+				continue
+			} else {
+				fmt.Printf("Found host: %s\n", ip)
+				resultChan <- ip
+			}
 		}
 	}
 }
