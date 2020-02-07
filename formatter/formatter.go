@@ -40,6 +40,7 @@ func (o *Formatter) AssemblePortData(ports []int, pra *reference.PortRefArray) {
 		portRef := pra.Find(port)
 		row := []string{
 			strconv.Itoa(port),
+			"TCP",
 			portRef.Name,
 			portRef.Desc,
 		}

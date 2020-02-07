@@ -157,7 +157,7 @@ func (s *Scanner) ScanPort(host, port string) error {
 
 	if len(openedPorts) > 0 {
 		formatter := &formatter.Formatter{
-			Header:    []string{"Port", "Service Name", "Description"},
+			Header:    []string{"Port", "Protocol", "Service Name", "Description"},
 			Border:    false,
 			Separator: "|",
 		}
@@ -207,7 +207,7 @@ func portScanner(host string, jobChan <-chan int, resultChan chan<- int, wgs *sy
 	for port := range jobChan {
 		hostIP := fmt.Sprintf("%s:%d", host, port)
 
-		conn, err := net.DialTimeout("tcp", hostIP, 200*time.Millisecond)
+		conn, err := net.DialTimeout("tcp", hostIP, 500*time.Millisecond)
 		if err != nil {
 			continue
 		}
