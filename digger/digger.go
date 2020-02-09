@@ -3,56 +3,135 @@ package digger
 import (
 	"fmt"
 	"net"
+	"strconv"
+
+	"github.com/butageek/netool/formatter"
 )
 
 // Digger struct of Digger
 type Digger struct {
-	Host string
+	Domain string
 }
 
-// DigIP looks up the IP address for the host
-func (d *Digger) DigIP() error {
-	ip, err := net.LookupIP(d.Host)
+// Dig lookup information of host
+// Includes records of IP, NS, CNAME, MX
+func (d *Digger) Dig() error {
+	addrs, err := digHost(d.Domain)
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(ip); i++ {
-		fmt.Println(ip[i])
+	nss, err := digNS(d.Domain)
+	if err != nil {
+		return err
 	}
+	cname, err := digCNAME(d.Domain)
+	if err != nil {
+		return err
+	}
+	mxs, err := digMX(d.Domain)
+	if err != nil {
+		return err
+	}
+
+	formatter := &formatter.Formatter{
+		Header:    []string{"Domain", "Type", "Value"},
+		Data:      assembleDigData(d, addrs, nss, mxs, cname),
+		Border:    false,
+		Separator: "|",
+	}
+	formatter.Print()
 
 	return nil
 }
 
-// DigNS looks up the name servers for the host
-func (d *Digger) DigNS() error {
-	ns, err := net.LookupNS(d.Host)
+func assembleDigData(d *Digger, addrs, nss, mxs []string, cname string) [][]string {
+	var data [][]string
+
+	for _, addr := range addrs {
+		row := []string{
+			d.Domain,
+			"A",
+			addr,
+		}
+		data = append(data, row)
+	}
+	data = append(data, []string{"", "", ""})
+
+	row := []string{
+		d.Domain,
+		"CNAME",
+		cname,
+	}
+	data = append(data, row)
+	data = append(data, []string{"", "", ""})
+
+	for _, ns := range nss {
+		row := []string{
+			d.Domain,
+			"NS",
+			ns,
+		}
+		data = append(data, row)
+	}
+	data = append(data, []string{"", "", ""})
+
+	for _, mx := range mxs {
+		row := []string{
+			d.Domain,
+			"MX",
+			mx,
+		}
+		data = append(data, row)
+	}
+
+	return data
+}
+
+func digHost(host string) ([]string, error) {
+	var addrs []string
+
+	addrs, err := net.LookupHost(host)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	return addrs, nil
+}
+
+func digNS(domain string) ([]string, error) {
+	var nss []string
+
+	ns, err := net.LookupNS(domain)
+	if err != nil {
+		return nil, err
 	}
 	for i := 0; i < len(ns); i++ {
-		fmt.Println(ns[i].Host)
+		nss = append(nss, ns[i].Host)
 	}
-	return nil
+
+	return nss, nil
 }
 
-// DigCNAME looks up the CNAME for the host
-func (d *Digger) DigCNAME() error {
-	cname, err := net.LookupCNAME(d.Host)
+func digCNAME(host string) (string, error) {
+	cname, err := net.LookupCNAME(host)
 	if err != nil {
-		return err
+		return "", err
 	}
-	fmt.Println(cname)
-	return nil
+
+	return cname, nil
 }
 
-// DigMX looks up the MX for the host
-func (d *Digger) DigMX() error {
-	mx, err := net.LookupMX(d.Host)
+func digMX(domain string) ([]string, error) {
+	var mxs []string
+
+	mx, err := net.LookupMX(domain)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for i := 0; i < len(mx); i++ {
-		fmt.Println(mx[i].Host, mx[i].Pref)
+		mxStr := fmt.Sprintf("%s %s", mx[i].Host, strconv.Itoa(int(mx[i].Pref)))
+		mxs = append(mxs, mxStr)
 	}
-	return nil
+
+	return mxs, nil
 }

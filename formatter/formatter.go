@@ -21,19 +21,19 @@ type Formatter struct {
 }
 
 // Print prints formatted table of data
-func (o *Formatter) Print() {
+func (f *Formatter) Print() {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader(o.Header)
-	table.SetBorder(o.Border)
-	table.SetCenterSeparator(o.Separator)
-	table.AppendBulk(o.Data)
+	table.SetHeader(f.Header)
+	table.SetBorder(f.Border)
+	table.SetCenterSeparator(f.Separator)
+	table.AppendBulk(f.Data)
 	fmt.Println()
 	table.Render()
 	fmt.Println()
 }
 
 // AssemblePortData assembles output data for port scanner
-func (o *Formatter) AssemblePortData(ports []int, pra *reference.PortRefArray) {
+func (f *Formatter) AssemblePortData(ports []int, pra *reference.PortRefArray) {
 	var data [][]string
 
 	for _, port := range ports {
@@ -47,11 +47,11 @@ func (o *Formatter) AssemblePortData(ports []int, pra *reference.PortRefArray) {
 		data = append(data, row)
 	}
 
-	o.Data = data
+	f.Data = data
 }
 
 // AssembleNetData assembles output data for net scanner
-func (o *Formatter) AssembleNetData(ips []net.IP) {
+func (f *Formatter) AssembleNetData(ips []net.IP) {
 	var data [][]string
 	var row []string
 
@@ -83,5 +83,5 @@ func (o *Formatter) AssembleNetData(ips []net.IP) {
 		data = append(data, row)
 	}
 
-	o.Data = data
+	f.Data = data
 }

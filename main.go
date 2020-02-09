@@ -16,59 +16,21 @@ func main() {
 		Usage: "query IP, NS, CNAME, MX records; scan network and open ports",
 	}
 
-	hostFlag := []cli.Flag{
-		&cli.StringFlag{
-			Name:     "host",
-			Usage:    "hostname or IP address to lookup",
-			Required: true,
-		},
-	}
-
 	app.Commands = []*cli.Command{
 		{
-			Name:  "ip",
-			Usage: "looks up the IP address for the host",
-			Flags: hostFlag,
-			Action: func(c *cli.Context) error {
-				myDigger := &digger.Digger{}
-				myDigger.Host = c.String("host")
-				myDigger.DigIP()
-
-				return nil
+			Name:  "dig",
+			Usage: "looks up the information for the domain",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "domain",
+					Usage:    "domain name to lookup",
+					Required: true,
+				},
 			},
-		},
-		{
-			Name:  "ns",
-			Usage: "looks up the name servers for the host",
-			Flags: hostFlag,
 			Action: func(c *cli.Context) error {
 				myDigger := &digger.Digger{}
-				myDigger.Host = c.String("host")
-				myDigger.DigNS()
-
-				return nil
-			},
-		},
-		{
-			Name:  "cname",
-			Usage: "looks up the CNAME for the host",
-			Flags: hostFlag,
-			Action: func(c *cli.Context) error {
-				myDigger := &digger.Digger{}
-				myDigger.Host = c.String("host")
-				myDigger.DigCNAME()
-
-				return nil
-			},
-		},
-		{
-			Name:  "mx",
-			Usage: "looks up the MX for the host",
-			Flags: hostFlag,
-			Action: func(c *cli.Context) error {
-				myDigger := &digger.Digger{}
-				myDigger.Host = c.String("host")
-				myDigger.DigMX()
+				myDigger.Domain = c.String("domain")
+				myDigger.Dig()
 
 				return nil
 			},
