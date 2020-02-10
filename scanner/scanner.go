@@ -56,9 +56,10 @@ func (s *Scanner) ScanNet(cidr string) error {
 
 	if len(hostsAlive) > 0 {
 		formatter := &formatter.Formatter{
-			Header:    []string{"Host", "Status", "MAC Address", "Manufacturer"},
-			Border:    false,
-			Separator: "|",
+			Header:          []string{"Host", "Status", "MAC Address", "Manufacturer"},
+			Border:          false,
+			Separator:       " ",
+			ColumnSeparator: " ",
 		}
 		formatter.AssembleNetData(hostsAlive)
 		formatter.Print()
@@ -171,9 +172,10 @@ func (s *Scanner) ScanPort(host, port string) error {
 
 	if len(openedPorts) > 0 {
 		formatter := &formatter.Formatter{
-			Header:    []string{"Port", "Protocol", "Service Name", "Description"},
-			Border:    false,
-			Separator: "|",
+			Header:          []string{"Port", "Protocol", "Service Name", "Description"},
+			Border:          false,
+			Separator:       " ",
+			ColumnSeparator: " ",
 		}
 		formatter.AssemblePortData(openedPorts, &portRefArray)
 		formatter.Print()

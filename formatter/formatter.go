@@ -14,10 +14,11 @@ import (
 
 // Formatter struct of Formatter
 type Formatter struct {
-	Header    []string
-	Data      [][]string
-	Border    bool
-	Separator string
+	Header          []string
+	Data            [][]string
+	Border          bool
+	Separator       string
+	ColumnSeparator string
 }
 
 // Print prints formatted table of data
@@ -26,6 +27,7 @@ func (f *Formatter) Print() {
 	table.SetHeader(f.Header)
 	table.SetBorder(f.Border)
 	table.SetCenterSeparator(f.Separator)
+	table.SetColumnSeparator(f.ColumnSeparator)
 	table.AppendBulk(f.Data)
 	fmt.Println()
 	table.Render()

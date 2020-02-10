@@ -34,10 +34,11 @@ func (d *Digger) Dig() error {
 	}
 
 	formatter := &formatter.Formatter{
-		Header:    []string{"Domain", "Type", "Value"},
-		Data:      assembleDigData(d, addrs, nss, mxs, cname),
-		Border:    false,
-		Separator: "|",
+		Header:          []string{"Domain", "Type", "Value"},
+		Data:            assembleDigData(d, addrs, nss, mxs, cname),
+		Border:          false,
+		Separator:       " ",
+		ColumnSeparator: " ",
 	}
 	formatter.Print()
 

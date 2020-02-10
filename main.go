@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os"
 
@@ -18,60 +19,60 @@ func main() {
 
 	app.Commands = []*cli.Command{
 		{
-			Name:  "dig",
-			Usage: "looks up the information for the domain",
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:     "domain",
-					Usage:    "domain name to lookup",
-					Required: true,
-				},
-			},
+			Name: "dig",
+			Usage: `looks up the information for the domain
+			@arguments:
+				Domain - domain to lookup, eg. example.com`,
 			Action: func(c *cli.Context) error {
-				myDigger := &digger.Digger{}
-				myDigger.Domain = c.String("domain")
-				myDigger.Dig()
+				if c.NArg() > 0 {
+					myDigger := &digger.Digger{}
+					myDigger.Domain = c.Args().Get(0)
+					myDigger.Dig()
 
-				return nil
+					return nil
+				}
+
+				return errors.New("Missing argument: Domain => eg: example.com")
 			},
 		},
 		{
-			Name:  "port",
-			Usage: "scan open ports for the host",
+			Name: "port",
+			Usage: `scan open ports for the host
+			@arguments:
+				Host - host to scan, eg. www.example.com or 10.10.10.10`,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
-					Name:     "host",
-					Usage:    "hostname or IP address to scan",
-					Required: true,
-				},
-				&cli.StringFlag{
-					Name:     "port",
-					Usage:    "port number to scan, eg. 22,80,100-200",
-					Required: true,
+					Name:    "port",
+					Aliases: []string{"p"},
+					Value:   "1-1023,3389",
+					Usage:   "port number to scan, eg. 80,100-200",
 				},
 			},
 			Action: func(c *cli.Context) error {
-				myScanner := &scanner.Scanner{}
-				myScanner.ScanPort(c.String("host"), c.String("port"))
+				if c.NArg() > 0 {
+					myScanner := &scanner.Scanner{}
+					myScanner.ScanPort(c.Args().Get(0), c.String("port"))
 
-				return nil
+					return nil
+				}
+
+				return errors.New("Missing argument: Host => eg: www.example.com or 10.10.10.10")
 			},
 		},
 		{
-			Name:  "net",
-			Usage: "scan network for hosts that are alive",
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:     "cidr",
-					Usage:    "network range (CIDR) to scan, eg. 192.168.1.0/24",
-					Required: true,
-				},
-			},
+			Name: "net",
+			Usage: `scan network for hosts that are alive
+			@arguments:
+				CIDR - cidr to scan, eg. 192.168.1.1/24`,
 			Action: func(c *cli.Context) error {
-				myScanner := &scanner.Scanner{}
-				myScanner.ScanNet(c.String("cidr"))
+				if c.NArg() > 0 {
+					myScanner := &scanner.Scanner{}
+					myScanner.ScanNet(c.Args().Get(0))
 
-				return nil
+					return nil
+				}
+
+				return errors.New("Missing argument: CIDR => eg: 192.168.1.1/24")
 			},
 		},
 	}
