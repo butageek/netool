@@ -2,6 +2,7 @@ package reference
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gocarina/gocsv"
@@ -20,7 +21,8 @@ type PortRefArray []PortRef
 
 // Init initialize PortRefArray
 func (p *PortRefArray) Init() {
-	os.Chdir("reference")
+	filePath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	os.Chdir(filePath)
 	f, err := os.OpenFile("service-names-port-numbers.csv", os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		panic(err)
