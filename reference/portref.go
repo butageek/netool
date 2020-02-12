@@ -21,6 +21,7 @@ type PortRefArray []PortRef
 
 // Init initialize PortRefArray
 func (p *PortRefArray) Init() {
+	// switch working directory to the same as executable
 	filePath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	os.Chdir(filePath)
 	f, err := os.OpenFile("service-names-port-numbers.csv", os.O_RDONLY, os.ModePerm)
@@ -34,7 +35,7 @@ func (p *PortRefArray) Init() {
 	}
 }
 
-// Find finds name of port
+// Find finds name of port and returns portRef object
 func (p *PortRefArray) Find(port int) *PortRef {
 	for _, portRef := range *p {
 		if portRef.Protocol == "tcp" && portRef.PortNum == strconv.Itoa(port) {

@@ -39,6 +39,7 @@ func (f *Formatter) AssemblePortData(ports []int, pra *reference.PortRefArray) {
 	var data [][]string
 
 	for _, port := range ports {
+		// lookup port reference for port name and port description
 		portRef := pra.Find(port)
 		row := []string{
 			strconv.Itoa(port),
@@ -58,6 +59,7 @@ func (f *Formatter) AssembleNetData(ips []net.IP) {
 	var row []string
 
 	for _, ip := range ips {
+		// search MAC address in local ARP table for given IP address
 		macStr := arp.Search(ip.String())
 		mac, err := net.ParseMAC(macStr)
 		if err != nil {
@@ -70,6 +72,8 @@ func (f *Formatter) AssembleNetData(ips []net.IP) {
 			data = append(data, row)
 			continue
 		}
+
+		// lookup for manufacturer based on first 3 bytes of MAC address
 		prefix := [3]byte{
 			mac[0],
 			mac[1],

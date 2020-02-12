@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/butageek/netool/formatter"
 	"github.com/butageek/netool/reference"
+	"github.com/butageek/netool/validator"
 )
 
 // Scanner struct of Scanner
@@ -22,10 +24,14 @@ type Scanner struct{}
 
 //ScanNet scans network for hosts that are alive
 func (s *Scanner) ScanNet(cidr string) error {
+	// parse IP addresses for given cidr
 	ips, _ := getIPs(cidr)
+	// init channels
 	jobChan := make(chan string, len(ips))
 	resultChan := make(chan string, 10)
 
+	// init WaitGroups
+	// wgs for Scanner, wgr for Receiver
 	wgs := sync.WaitGroup{}
 	wgr := sync.WaitGroup{}
 
@@ -33,6 +39,7 @@ func (s *Scanner) ScanNet(cidr string) error {
 	log.Printf("Scanning net %s\n", cidr)
 	fmt.Println()
 
+	// set concurrency limit for Scanner
 	numScanners := 100
 	wgs.Add(numScanners)
 	for i := 1; i <= numScanners; i++ {
@@ -40,9 +47,11 @@ func (s *Scanner) ScanNet(cidr string) error {
 	}
 
 	hostsAlive := []net.IP{}
+	// set one Receiver
 	wgr.Add(1)
 	go netReceiver(resultChan, &hostsAlive, &wgr)
 
+	// init jobChan using parsed IPs
 	for _, ip := range ips {
 		jobChan <- ip
 	}
@@ -70,6 +79,7 @@ func (s *Scanner) ScanNet(cidr string) error {
 	return nil
 }
 
+// getIPs parses given CIDR and return IPs in that range
 func getIPs(cidr string) ([]string, error) {
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -84,6 +94,7 @@ func getIPs(cidr string) ([]string, error) {
 	return ips[1 : len(ips)-1], nil
 }
 
+// inc increases IP address by 1
 func inc(ip net.IP) {
 	for j := len(ip) - 1; j >= 0; j-- {
 		ip[j]++
@@ -93,6 +104,7 @@ func inc(ip net.IP) {
 	}
 }
 
+// netScanner pings a host and appends it to resultChan if it's alive
 func netScanner(jobChan <-chan string, resultChan chan<- string, wgs *sync.WaitGroup) {
 	defer wgs.Done()
 
@@ -120,6 +132,7 @@ func netScanner(jobChan <-chan string, resultChan chan<- string, wgs *sync.WaitG
 	}
 }
 
+// netReceiver get IP from resultChan and appends to host IPs that are alive
 func netReceiver(resultChan <-chan string, hostsAlive *[]net.IP, wgr *sync.WaitGroup) {
 	defer wgr.Done()
 
@@ -128,6 +141,7 @@ func netReceiver(resultChan <-chan string, hostsAlive *[]net.IP, wgr *sync.WaitG
 	}
 }
 
+// sortIPs sorts IPs
 func sortIPs(ips *[]net.IP) {
 	sort.Slice(*ips, func(i, j int) bool {
 		return bytes.Compare((*ips)[i], (*ips)[j]) < 0
@@ -136,14 +150,19 @@ func sortIPs(ips *[]net.IP) {
 
 // ScanPort scans open ports for the host
 func (s *Scanner) ScanPort(host, port string) error {
+	// init port reference object
 	portRefArray := reference.PortRefArray{}
 	portRefArray.Init()
 
+	// parse ports on the given port argument
 	ports := parsePorts(port)
+	// init channels
 	numPorts := len(ports)
 	jobChan := make(chan int, numPorts)
 	resultChan := make(chan int, 10)
 
+	// init WaitGroups
+	// wgs for Scanner, wgr for Receiver
 	wgs := sync.WaitGroup{}
 	wgr := sync.WaitGroup{}
 
@@ -151,6 +170,7 @@ func (s *Scanner) ScanPort(host, port string) error {
 	log.Printf("Scanning host %s\n", host)
 	fmt.Println()
 
+	// set Scanner concurrency limit
 	numScanners := 100
 	for i := 1; i <= numScanners; i++ {
 		wgs.Add(1)
@@ -158,9 +178,11 @@ func (s *Scanner) ScanPort(host, port string) error {
 	}
 
 	openedPorts := []int{}
+	// set Receiver concurrency limit to 1
 	wgr.Add(1)
 	go portReceiver(resultChan, &openedPorts, &wgr)
 
+	// init jobChan using parsed ports
 	for _, port := range ports {
 		jobChan <- port
 	}
@@ -186,8 +208,11 @@ func (s *Scanner) ScanPort(host, port string) error {
 	return nil
 }
 
+// parsePorts parses ports on port argument
+// supports comma and dash separated ports. eg. 80,100-200
 func parsePorts(portString string) []int {
 	var ports []int
+	v := validator.InitValidator()
 
 	portsSplit := strings.Split(portString, ",")
 
@@ -198,14 +223,23 @@ func parsePorts(portString string) []int {
 			if err != nil {
 				log.Fatal(err)
 			}
+			if !validator.IsValid(v.Regex["port"], strconv.Itoa(portStart)) {
+				log.Fatal(errors.New("Wrong argument format: Port. Example: 80,100-200"))
+			}
 			portEnd, err := strconv.Atoi(portBounds[1])
 			if err != nil {
 				log.Fatal(err)
+			}
+			if !validator.IsValid(v.Regex["port"], strconv.Itoa(portEnd)) {
+				log.Fatal(errors.New("Wrong argument format: Port. Example: 880,100-2000"))
 			}
 			for i := portStart; i <= portEnd; i++ {
 				ports = append(ports, i)
 			}
 		} else {
+			if !validator.IsValid(v.Regex["port"], port) {
+				log.Fatal(errors.New("Wrong argument format: Port. Example: 80,100-200"))
+			}
 			portNum, err := strconv.Atoi(port)
 			if err != nil {
 				log.Fatal(err)
@@ -217,6 +251,7 @@ func parsePorts(portString string) []int {
 	return ports
 }
 
+// portScanner scans a port and push to resultChan if it's open
 func portScanner(host string, jobChan <-chan int, resultChan chan<- int, wgs *sync.WaitGroup) {
 	defer wgs.Done()
 
@@ -234,6 +269,7 @@ func portScanner(host string, jobChan <-chan int, resultChan chan<- int, wgs *sy
 	}
 }
 
+// portReceiver receives ports from resultChan and appends to openedPorts array
 func portReceiver(resultChan <-chan int, openedPorts *[]int, wgr *sync.WaitGroup) {
 	defer wgr.Done()
 

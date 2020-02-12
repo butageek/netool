@@ -13,21 +13,25 @@ type Digger struct {
 	Domain string
 }
 
-// Dig lookup information of host
+// Dig looks up information for given domain
 // Includes records of IP, NS, CNAME, MX
 func (d *Digger) Dig() error {
+	// get A records
 	addrs, err := digHost(d.Domain)
 	if err != nil {
 		return err
 	}
+	// get NS records
 	nss, err := digNS(d.Domain)
 	if err != nil {
 		return err
 	}
+	// get CNAME records
 	cname, err := digCNAME(d.Domain)
 	if err != nil {
 		return err
 	}
+	// get MX records
 	mxs, err := digMX(d.Domain)
 	if err != nil {
 		return err
@@ -45,9 +49,11 @@ func (d *Digger) Dig() error {
 	return nil
 }
 
+// assembleDigData aseembles data for Formatter struct
 func assembleDigData(d *Digger, addrs, nss, mxs []string, cname string) [][]string {
 	var data [][]string
 
+	// append A records as rows to data
 	for _, addr := range addrs {
 		row := []string{
 			d.Domain,
@@ -58,6 +64,7 @@ func assembleDigData(d *Digger, addrs, nss, mxs []string, cname string) [][]stri
 	}
 	data = append(data, []string{"", "", ""})
 
+	// append CNAME records as rows to data
 	row := []string{
 		d.Domain,
 		"CNAME",
@@ -66,6 +73,7 @@ func assembleDigData(d *Digger, addrs, nss, mxs []string, cname string) [][]stri
 	data = append(data, row)
 	data = append(data, []string{"", "", ""})
 
+	// append NS records as rows to data
 	for _, ns := range nss {
 		row := []string{
 			d.Domain,
@@ -76,6 +84,7 @@ func assembleDigData(d *Digger, addrs, nss, mxs []string, cname string) [][]stri
 	}
 	data = append(data, []string{"", "", ""})
 
+	// append MX records as rows to data
 	for _, mx := range mxs {
 		row := []string{
 			d.Domain,
@@ -88,6 +97,7 @@ func assembleDigData(d *Digger, addrs, nss, mxs []string, cname string) [][]stri
 	return data
 }
 
+// digHost gets A records
 func digHost(host string) ([]string, error) {
 	var addrs []string
 
@@ -99,6 +109,7 @@ func digHost(host string) ([]string, error) {
 	return addrs, nil
 }
 
+// digNS gets NS records
 func digNS(domain string) ([]string, error) {
 	var nss []string
 
@@ -106,6 +117,7 @@ func digNS(domain string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for i := 0; i < len(ns); i++ {
 		nss = append(nss, ns[i].Host)
 	}
@@ -113,6 +125,7 @@ func digNS(domain string) ([]string, error) {
 	return nss, nil
 }
 
+// digCNAME gets CNAME records
 func digCNAME(host string) (string, error) {
 	cname, err := net.LookupCNAME(host)
 	if err != nil {
@@ -122,6 +135,7 @@ func digCNAME(host string) (string, error) {
 	return cname, nil
 }
 
+// digMX gets MX records
 func digMX(domain string) ([]string, error) {
 	var mxs []string
 
@@ -129,6 +143,7 @@ func digMX(domain string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for i := 0; i < len(mx); i++ {
 		mxStr := fmt.Sprintf("%s %s", mx[i].Host, strconv.Itoa(int(mx[i].Pref)))
 		mxs = append(mxs, mxStr)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/butageek/netool/digger"
 	"github.com/butageek/netool/scanner"
+	"github.com/butageek/netool/validator"
 
 	"github.com/urfave/cli/v2"
 )
@@ -19,12 +20,18 @@ func main() {
 
 	app.Commands = []*cli.Command{
 		{
-			Name: "dig",
-			Usage: `looks up the information for the domain
-			@arguments:
-				Domain - domain to lookup, eg. example.com`,
+			// dig looks up for domain informations
+			// includes IP, NS, CNAME, MX records
+			Name:  "dig",
+			Usage: "looks up the information for the domain",
 			Action: func(c *cli.Context) error {
 				if c.NArg() > 0 {
+					// validate argument against Domain format
+					v := validator.InitValidator()
+					if !validator.IsValid(v.Regex["domain"], c.Args().Get(0)) {
+						return errors.New("Wrong argument format: Domain. Example: example.com")
+					}
+
 					myDigger := &digger.Digger{}
 					myDigger.Domain = c.Args().Get(0)
 					myDigger.Dig()
@@ -32,14 +39,13 @@ func main() {
 					return nil
 				}
 
-				return errors.New("Missing argument: Domain => eg: example.com")
+				return errors.New("Missing argument: Domain. Example: example.com")
 			},
 		},
 		{
-			Name: "port",
-			Usage: `scan open ports for the host
-			@arguments:
-				Host - host to scan, eg. www.example.com or 10.10.10.10`,
+			// port command scans ports for given host
+			Name:  "port",
+			Usage: "scan open ports for the host",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:    "port",
@@ -56,23 +62,28 @@ func main() {
 					return nil
 				}
 
-				return errors.New("Missing argument: Host => eg: www.example.com or 10.10.10.10")
+				return errors.New("Missing argument: Host. Example: www.example.com or 10.10.10.10")
 			},
 		},
 		{
-			Name: "net",
-			Usage: `scan network for hosts that are alive
-			@arguments:
-				CIDR - cidr to scan, eg. 192.168.1.1/24`,
+			// net scans network for given CIDR in format: xxx.xxx.xxx.xx/xx
+			Name:  "net",
+			Usage: "scan network for hosts that are alive",
 			Action: func(c *cli.Context) error {
 				if c.NArg() > 0 {
+					// validate argument against CIDR format
+					v := validator.InitValidator()
+					if !validator.IsValid(v.Regex["cidr"], c.Args().Get(0)) {
+						return errors.New("Wrong argument format: CIDR. Example: 192.168.1.1/24")
+					}
+
 					myScanner := &scanner.Scanner{}
 					myScanner.ScanNet(c.Args().Get(0))
 
 					return nil
 				}
 
-				return errors.New("Missing argument: CIDR => eg: 192.168.1.1/24")
+				return errors.New("Missing argument: CIDR. Example: 192.168.1.1/24")
 			},
 		},
 	}
