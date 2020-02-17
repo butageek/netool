@@ -41,7 +41,7 @@ Arguments:
 		// validate argument against CIDR format
 		v := validator.InitValidator()
 		if !validator.IsValid(v.Regex["cidr"], args[0]) {
-			fmt.Println("Wrong argument format")
+			fmt.Println("Invalid CIDR format")
 			cmd.Help()
 		}
 

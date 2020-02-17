@@ -41,7 +41,7 @@ Arguments:
 		// validate argument against Domain format
 		v := validator.InitValidator()
 		if !validator.IsValid(v.Regex["domain"], args[0]) {
-			fmt.Println("Wrong argument format")
+			fmt.Println("Invalid domain format")
 			cmd.Help()
 		}
 

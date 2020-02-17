@@ -22,7 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/butageek/netool/scanner"
+	"github.com/butageek/netool/validator"
 	"github.com/spf13/cobra"
 )
 
@@ -35,8 +38,15 @@ Arguments:
 	host - host name or IP address. eg. example.com or 10.1.1.1`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		myScanner := &scanner.Scanner{}
+		// validate flag port against port format
 		portStr, _ := cmd.Flags().GetString("port")
+		v := validator.InitValidator()
+		if !validator.IsValid(v.Regex["port"], portStr) {
+			fmt.Println("Invalid port format")
+			cmd.Help()
+		}
+
+		myScanner := &scanner.Scanner{}
 		myScanner.ScanPort(args[0], portStr)
 	},
 }

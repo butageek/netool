@@ -15,7 +15,7 @@ func InitValidator() *Validator {
 		Regex: map[string]string{},
 	}
 	v.Regex["domain"] = `^\w+\.\w{2,4}$`
-	v.Regex["port"] = `^\d{1,5}$`
+	v.Regex["port"] = `^\d+([,-]\d+)*$`
 	v.Regex["cidr"] = `^\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}\/\d{1,2}$`
 
 	return &v
